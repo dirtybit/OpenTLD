@@ -8,4 +8,4 @@ OpenTLDConfig.cmake
 TODO
 cmake_install.cmake
 *.a
-
+/build/
