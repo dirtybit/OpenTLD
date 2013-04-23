@@ -21,6 +21,11 @@
 
 using namespace std;
 
+/**
+ * @author Clemens Korner
+ */
+
+
 namespace tld
 {
 
@@ -41,7 +46,7 @@ Settings::Settings() :
     m_saveOutput(false),
     m_alternating(false),
     m_exportModelAfterRun(false),
-    m_trajectory(20),
+    m_trajectory(0),
     m_method(IMACQ_CAM),
     m_startFrame(1),
     m_lastFrame(0),

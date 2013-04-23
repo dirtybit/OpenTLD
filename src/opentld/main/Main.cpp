@@ -29,13 +29,14 @@
 #include "ImAcq.h"
 #include "Gui.h"
 #include "TLDUtil.h"
+#include "Trajectory.h"
 
 using namespace tld;
 using namespace cv;
 
 void Main::doWork()
 {
-
+	Trajectory trajectory;
     IplImage *img = imAcqGetImg(imAcq);
     Mat grey(img->height, img->width, CV_8UC1);
     cvtColor(cv::Mat(img), grey, CV_BGR2GRAY);
@@ -43,6 +44,11 @@ void Main::doWork()
     tld->detectorCascade->imgWidth = grey.cols;
     tld->detectorCascade->imgHeight = grey.rows;
     tld->detectorCascade->imgWidthStep = grey.step;
+
+	if(showTrajectory)
+	{
+		trajectory.init(trajectoryLength);
+	}
 
     if(selectManually)
     {
@@ -158,7 +164,24 @@ void Main::doWork()
             {
                 CvScalar rectangleColor = (confident) ? blue : yellow;
                 cvRectangle(img, tld->currBB->tl(), tld->currBB->br(), rectangleColor, 8, 8, 0);
+
+				if(showTrajectory)
+				{
+					CvPoint center = cvPoint(tld->currBB->x+tld->currBB->width/2, tld->currBB->y+tld->currBB->height/2);
+					cvLine(img, cvPoint(center.x-2, center.y-2), cvPoint(center.x+2, center.y+2), rectangleColor, 2);
+					cvLine(img, cvPoint(center.x-2, center.y+2), cvPoint(center.x+2, center.y-2), rectangleColor, 2);
+					trajectory.addPoint(center, rectangleColor);
+				}
             }
+			else if(showTrajectory)
+			{
+				trajectory.addPoint(cvPoint(-1, -1), cvScalar(-1, -1, -1));
+			}
+
+			if(showTrajectory)
+			{
+				trajectory.drawTrajectrory(img);
+			}
 
             CvFont font;
             cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, .5, .5, 0, 1, 8);

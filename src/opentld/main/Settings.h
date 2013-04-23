@@ -16,12 +16,18 @@
 *   along with OpenTLD.  If not, see <http://www.gnu.org/licenses/>.
 *
 */
+
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
 #include <vector>
 
 #include "ImAcq.h"
+
+/**
+ * @author Clemens Korner
+ */
+
 
 namespace tld
 {

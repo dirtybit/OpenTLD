@@ -44,6 +44,8 @@ public:
     ImAcq *imAcq;
     tld::Gui *gui;
     bool showOutput;
+	bool showTrajectory;
+	int trajectoryLength;
     const char *printResults;
     const char *saveDir;
     double threshold;
@@ -66,6 +68,9 @@ public:
         saveDir = ".";
         threshold = 0.5;
         showForeground = 0;
+
+		showTrajectory = false;
+		trajectoryLength = 0;
 
         selectManually = 0;
 
