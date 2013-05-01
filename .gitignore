@@ -10,3 +10,6 @@ cmake_install.cmake
 *.a
 /build
 /input
+/model
+/results
+/timing
