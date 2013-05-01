@@ -39,8 +39,9 @@ add_library(libopentld
     tld/NNClassifier.h
     tld/NormalizedPatch.h
     tld/TLD.h
-    tld/TLDUtil.h
-    tld/VarianceFilter.h)
+	tld/TLDUtil.h
+	tld/VarianceFilter.h
+	tld/Timing.h)
 
 target_link_libraries(libopentld ${OpenCV_LIBS})
 

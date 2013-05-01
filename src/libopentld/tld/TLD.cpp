@@ -29,6 +29,7 @@
 
 #include "NNClassifier.h"
 #include "TLDUtil.h"
+#include "Timing.h"
 
 using namespace std;
 using namespace cv;
@@ -103,6 +104,7 @@ void TLD::selectObject(const Mat &img, Rect *bb)
 
 void TLD::processImage(const Mat &img)
 {
+    tick_t procInit, procFinal;
     storeCurrentData();
     Mat grey_frame;
     cvtColor(img, grey_frame, CV_RGB2GRAY);
@@ -110,12 +112,18 @@ void TLD::processImage(const Mat &img)
 
     if(trackerEnabled)
     {
+        getCPUTick(&procInit);
         medianFlowTracker->track(prevImg, currImg, prevBB);
+        getCPUTick(&procFinal);
+        PRINT_TIMING("TrackTime", procInit, procFinal);
     }
 
     if(detectorEnabled && (!alternating || medianFlowTracker->trackerBB == NULL))
     {
+        getCPUTick(&procInit);
         detectorCascade->detect(grey_frame);
+        getCPUTick(&procFinal);
+        PRINT_TIMING("DetecTime", procInit, procFinal);
     }
 
     fuseHypotheses();

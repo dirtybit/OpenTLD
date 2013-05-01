@@ -30,6 +30,7 @@
 #include "Gui.h"
 #include "TLDUtil.h"
 #include "Trajectory.h"
+#include "Timing.h"
 
 using namespace tld;
 using namespace cv;
@@ -99,7 +100,11 @@ void Main::doWork()
 
     while(imAcqHasMoreFrames(imAcq))
     {
+        tick_t procInit, procFinal;
         double tic = cvGetTickCount();
+
+        getCPUTick(&procInit);
+        fprintf(stderr, "-----------------------------\n");
 
         if(!reuseFrameOnce)
         {
@@ -135,6 +140,8 @@ void Main::doWork()
             }
         }
 
+        getCPUTick(&procFinal);
+        PRINT_TIMING("FrameProcTime", procInit, procFinal);
         double toc = (cvGetTickCount() - tic) / cvGetTickFrequency();
 
         toc = toc / 1000000;
