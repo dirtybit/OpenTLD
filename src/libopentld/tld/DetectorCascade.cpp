@@ -57,7 +57,7 @@ DetectorCascade::DetectorCascade()
 
     initialised = false;
 
-    foregroundDetector = new ForegroundDetector();
+    //foregroundDetector = new ForegroundDetector();
     varianceFilter = new VarianceFilter();
     ensembleClassifier = new EnsembleClassifier();
     nnClassifier = new NNClassifier();
@@ -70,7 +70,7 @@ DetectorCascade::~DetectorCascade()
 {
     release();
 
-    delete foregroundDetector;
+    //delete foregroundDetector;
     delete varianceFilter;
     delete ensembleClassifier;
     delete nnClassifier;
@@ -110,9 +110,9 @@ void DetectorCascade::propagateMembers()
     clustering->windows = windows;
     clustering->numWindows = numWindows;
 
-    foregroundDetector->minBlobSize = minSize * minSize;
+    //foregroundDetector->minBlobSize = minSize * minSize;
 
-    foregroundDetector->detectionResult = detectionResult;
+    //foregroundDetector->detectionResult = detectionResult;
     varianceFilter->detectionResult = detectionResult;
     ensembleClassifier->detectionResult = detectionResult;
     nnClassifier->detectionResult = detectionResult;
@@ -128,7 +128,7 @@ void DetectorCascade::release()
 
     initialised = false;
 
-    foregroundDetector->release();
+    //foregroundDetector->release();
     ensembleClassifier->release();
     nnClassifier->release();
 
@@ -279,7 +279,7 @@ void DetectorCascade::detect(const Mat &img)
     }
 
     //Prepare components
-    foregroundDetector->nextIteration(img); //Calculates foreground
+    //foregroundDetector->nextIteration(img); //Calculates foreground (DISABLED)
     varianceFilter->nextIteration(img); //Calculates integral images
     ensembleClassifier->nextIteration(img);
 
@@ -290,6 +290,9 @@ void DetectorCascade::detect(const Mat &img)
 
         int *window = &windows[TLD_WINDOW_SIZE * i];
 
+        /*
+         * Foreground detection disabled
+         *
         if(foregroundDetector->isActive())
         {
             bool isInside = false;
@@ -312,6 +315,7 @@ void DetectorCascade::detect(const Mat &img)
                 continue;
             }
         }
+        */
 
         if(!varianceFilter->filter(i))
         {
