@@ -104,7 +104,6 @@ void Main::doWork()
         double tic = cvGetTickCount();
 
         getCPUTick(&procInit);
-        fprintf(stderr, "-----------------------------\n");
 
         if(!reuseFrameOnce)
         {
@@ -141,7 +140,7 @@ void Main::doWork()
         }
 
         getCPUTick(&procFinal);
-        PRINT_TIMING("FrameProcTime", procInit, procFinal);
+        PRINT_TIMING("FrameProcTime", procInit, procFinal, "\n");
         double toc = (cvGetTickCount() - tic) / cvGetTickFrequency();
 
         toc = toc / 1000000;
