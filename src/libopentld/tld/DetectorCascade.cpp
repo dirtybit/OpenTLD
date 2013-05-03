@@ -29,6 +29,7 @@
 #include <algorithm>
 
 #include "TLDUtil.h"
+#include "Timing.h"
 
 using namespace cv;
 
@@ -278,19 +279,24 @@ void DetectorCascade::detect(const Mat &img)
         return;
     }
 
+    tick_t procInit, procFinal;
     //Prepare components
-    foregroundDetector->nextIteration(img); //Calculates foreground
+    getCPUTick(&procInit);
+    //foregroundDetector->nextIteration(img); //Calculates foreground
     varianceFilter->nextIteration(img); //Calculates integral images
     ensembleClassifier->nextIteration(img);
+    getCPUTick(&procFinal);
+    PRINT_TIMING("InitTime", procInit, procFinal, ", ");
+    getCPUTick(&procInit);
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
 
     for(int i = 0; i < numWindows; i++)
     {
 
         int *window = &windows[TLD_WINDOW_SIZE * i];
 
-        if(foregroundDetector->isActive())
+        /*if(foregroundDetector->isActive())
         {
             bool isInside = false;
 
@@ -311,7 +317,7 @@ void DetectorCascade::detect(const Mat &img)
                 detectionResult->posteriors[i] = 0;
                 continue;
             }
-        }
+        }*/
 
         if(!varianceFilter->filter(i))
         {
@@ -333,9 +339,14 @@ void DetectorCascade::detect(const Mat &img)
 
 
     }
+    getCPUTick(&procFinal);
+    PRINT_TIMING("ClsfyTime", procInit, procFinal, ", ");
 
     //Cluster
+    getCPUTick(&procInit);
     clustering->clusterConfidentIndices();
+    getCPUTick(&procFinal);
+    PRINT_TIMING("ClustTime", procInit, procFinal, ", ");
 
     detectionResult->containsValidData = true;
 }
