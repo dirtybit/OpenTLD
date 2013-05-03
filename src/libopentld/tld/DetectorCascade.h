@@ -27,7 +27,7 @@
 #define DETECTORCASCADE_H_
 
 #include "DetectionResult.h"
-#include "ForegroundDetector.h"
+//#include "ForegroundDetector.h"
 #include "VarianceFilter.h"
 #include "EnsembleClassifier.h"
 #include "Clustering.h"
@@ -71,7 +71,7 @@ public:
     bool initialised;
 
     //Components of Detector Cascade
-    ForegroundDetector *foregroundDetector;
+    //ForegroundDetector *foregroundDetector;
     VarianceFilter *varianceFilter;
     EnsembleClassifier *ensembleClassifier;
     Clustering *clustering;

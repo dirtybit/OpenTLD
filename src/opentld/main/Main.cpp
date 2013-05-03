@@ -213,6 +213,7 @@ void Main::doWork()
 
                 if(key == 'q') break;
 
+                /*
                 if(key == 'b')
                 {
 
@@ -227,6 +228,7 @@ void Main::doWork()
                         fg->bgImg.release();
                     }
                 }
+                */
 
                 if(key == 'c')
                 {
