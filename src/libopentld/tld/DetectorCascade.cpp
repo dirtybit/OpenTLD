@@ -281,24 +281,23 @@ void DetectorCascade::detect(const Mat &img)
 
     tick_t procInit, procFinal;
     //Prepare components
-    getCPUTick(&procInit);
     //foregroundDetector->nextIteration(img); //Calculates foreground (DISABLED)
+    getCPUTick(&procInit);
     varianceFilter->nextIteration(img); //Calculates integral images
-    ensembleClassifier->nextIteration(img);
     getCPUTick(&procFinal);
-    PRINT_TIMING("InitTime", procInit, procFinal, ", ");
+    PRINT_TIMING("IntegTime", procInit, procFinal, ", ");
+    ensembleClassifier->nextIteration(img);
     getCPUTick(&procInit);
 
     //#pragma omp parallel for
 
     for(int i = 0; i < numWindows; i++)
-    {
-
-        int *window = &windows[TLD_WINDOW_SIZE * i];
-
+    {        
         /*
          * Foreground detection disabled
          *
+        int *window = &windows[TLD_WINDOW_SIZE * i];
+
         if(foregroundDetector->isActive())
         {
             bool isInside = false;
@@ -347,10 +346,7 @@ void DetectorCascade::detect(const Mat &img)
     PRINT_TIMING("ClsfyTime", procInit, procFinal, ", ");
 
     //Cluster
-    getCPUTick(&procInit);
     clustering->clusterConfidentIndices();
-    getCPUTick(&procFinal);
-    PRINT_TIMING("ClustTime", procInit, procFinal, ", ");
 
     detectionResult->containsValidData = true;
 }

@@ -80,7 +80,6 @@ float NNClassifier::ncc(float *f1, float *f2)
 
 float NNClassifier::classifyPatch(NormalizedPatch *patch)
 {
-
     if(truePositives->empty())
     {
         return 0;
