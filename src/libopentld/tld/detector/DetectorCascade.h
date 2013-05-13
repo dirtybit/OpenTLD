@@ -17,7 +17,7 @@
 *
 */
 /*
- * EnsembleClassifier.h
+ * DetectorCascade.h
  *
  *  Created on: Nov 16, 2011
  *      Author: Georg Nebehay
@@ -26,38 +26,36 @@
  *      Author: Sertac Olgunsoylu
  */
 
-#ifndef ENSEMBLECLASSIFIER_H_
-#define ENSEMBLECLASSIFIER_H_
+#ifndef DETECTORCASCADE_H_
+#define DETECTORCASCADE_H_
 
-#include "IEnsembleClassifier.h"
+#include "IDetectorCascade.h"
+#include "DetectionResult.h"
+//#include "ForegroundDetector.h"
+#include "VarianceFilter.h"
+#include "EnsembleClassifier.h"
+#include "Clustering.h"
+#include "NNClassifier.h"
 
-#include <opencv/cv.h>
 
 namespace tld
 {
 
-class EnsembleClassifier : public IEnsembleClassifier
+class DetectorCascade : public IDetectorCascade
 {
-    const unsigned char *img;
-
-    float calcConfidence(int *featureVector);
-    int calcFernFeature(int windowIdx, int treeIdx);
-    void calcFeatureVector(int windowIdx, int *featureVector);
-    void updatePosteriors(int *featureVector, int positive, int amount);
 public:
-    EnsembleClassifier();
-    virtual ~EnsembleClassifier();
-    void init();
-    void initFeatureLocations();
-    void initFeatureOffsets();
-    void initPosteriors();
-    void release();
-    void nextIteration(const cv::Mat &img);
-    void classifyWindow(int windowIdx);
-    void updatePosterior(int treeIdx, int idx, int positive, int amount);
-    void learn(int *boundary, int positive, int *featureVector);
-    bool filter(int i);
+
+    DetectorCascade();
+    virtual ~DetectorCascade();
+
+    virtual void init();
+    virtual void initWindowOffsets();
+    virtual void initWindowsAndScales();
+    virtual void propagateMembers();
+    virtual void release();
+    virtual void cleanPreviousData();
+    virtual void detect(const cv::Mat &img);
 };
 
 } /* namespace tld */
-#endif /* ENSEMBLECLASSIFIER_H_ */
+#endif /* DETECTORCASCADE_H_ */

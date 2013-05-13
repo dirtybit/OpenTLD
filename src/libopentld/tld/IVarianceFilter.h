@@ -17,43 +17,36 @@
 *
 */
 /*
- * NNClassifier.h
+ * IVarianceFilter.h
  *
- *  Created on: Nov 16, 2011
- *      Author: Georg Nebehay
- *
- *  Modified on: May 13, 2013
+ *  Created on: May 13, 2013
  *      Author: Sertac Olgunsoylu
  */
 
-#ifndef NNCLASSIFIER_H_
-#define NNCLASSIFIER_H_
-
-#include <vector>
+#ifndef IVARIANCEFILTER_H_
+#define IVARIANCEFILTER_H_
 
 #include <opencv/cv.h>
 
-#include "INNClassifier.h"
-#include "NormalizedPatch.h"
+#include "IntegralImage.h"
 #include "DetectionResult.h"
 
 namespace tld
 {
 
-class NNClassifier : public INNClassifier
+class IVarianceFilter
 {
-    float ncc(float *f1, float *f2);
 public:
-    NNClassifier();
-    virtual ~NNClassifier();
+    bool enabled;
+    int *windowOffsets;
 
-    void release();
-    float classifyPatch(NormalizedPatch *patch);
-    float classifyBB(const cv::Mat &img, cv::Rect *bb);
-    float classifyWindow(const cv::Mat &img, int windowIdx);
-    void learn(std::vector<NormalizedPatch> patches);
-    bool filter(const cv::Mat &img, int windowIdx);
+    DetectionResult *detectionResult;
+
+    float minVar;
+
+    virtual ~IVarianceFilter() { }
+
 };
 
 } /* namespace tld */
-#endif /* NNCLASSIFIER_H_ */
+#endif /* IVARIANCEFILTER_H_ */

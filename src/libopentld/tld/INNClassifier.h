@@ -17,43 +17,41 @@
 *
 */
 /*
- * NNClassifier.h
+ * INNClassifier.h
  *
- *  Created on: Nov 16, 2011
- *      Author: Georg Nebehay
- *
- *  Modified on: May 13, 2013
+ *  Created on: May 13, 2013
  *      Author: Sertac Olgunsoylu
  */
 
-#ifndef NNCLASSIFIER_H_
-#define NNCLASSIFIER_H_
+#ifndef INNCLASSIFIER_H_
+#define INNCLASSIFIER_H_
 
 #include <vector>
 
 #include <opencv/cv.h>
 
-#include "INNClassifier.h"
 #include "NormalizedPatch.h"
 #include "DetectionResult.h"
 
 namespace tld
 {
 
-class NNClassifier : public INNClassifier
+class INNClassifier
 {
-    float ncc(float *f1, float *f2);
 public:
-    NNClassifier();
-    virtual ~NNClassifier();
+    bool enabled;
 
-    void release();
-    float classifyPatch(NormalizedPatch *patch);
-    float classifyBB(const cv::Mat &img, cv::Rect *bb);
-    float classifyWindow(const cv::Mat &img, int windowIdx);
-    void learn(std::vector<NormalizedPatch> patches);
-    bool filter(const cv::Mat &img, int windowIdx);
+    int *windows;
+    float thetaFP;
+    float thetaTP;
+    DetectionResult *detectionResult;
+    std::vector<NormalizedPatch>* falsePositives;
+    std::vector<NormalizedPatch>* truePositives;
+
+    virtual void release() = 0;
+    virtual float classifyBB(const cv::Mat &img, cv::Rect *bb) = 0;
+    virtual void learn(std::vector<NormalizedPatch> patches) = 0;
 };
 
 } /* namespace tld */
-#endif /* NNCLASSIFIER_H_ */
+#endif /* INNCLASSIFIER_H_ */

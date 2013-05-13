@@ -17,21 +17,21 @@
 *
 */
 /*
- * DetectorCascade.h
+ * IDetectorCascade.h
  *
- *  Created on: Nov 16, 2011
- *      Author: Georg Nebehay
+ *  Created on: May 13, 2013
+ *      Author: Sertac Olgunsoylu
  */
 
-#ifndef DETECTORCASCADE_H_
-#define DETECTORCASCADE_H_
+#ifndef IDETECTORCASCADE_H_
+#define IDETECTORCASCADE_H_
 
 #include "DetectionResult.h"
 //#include "ForegroundDetector.h"
-#include "VarianceFilter.h"
-#include "EnsembleClassifier.h"
+#include "IVarianceFilter.h"
+#include "IEnsembleClassifier.h"
+#include "INNClassifier.h"
 #include "Clustering.h"
-#include "NNClassifier.h"
 
 
 namespace tld
@@ -41,8 +41,9 @@ namespace tld
 static const int TLD_WINDOW_SIZE = 5;
 static const int TLD_WINDOW_OFFSET_SIZE = 6;
 
-class DetectorCascade
+class IDetectorCascade
 {
+protected:
     //Working data
     int numScales;
     cv::Size *scales;
@@ -60,8 +61,8 @@ public:
     int imgWidth;
     int imgHeight;
     int imgWidthStep;
-    int objWidth;
-    int objHeight;
+    int objWidth;								
+    int objHeight;								
 
     int numWindows;
     int *windows;
@@ -70,29 +71,23 @@ public:
     //State data
     bool initialised;
 
-    //Components of Detector Cascade
-    //ForegroundDetector *foregroundDetector;
-    VarianceFilter *varianceFilter;
-    EnsembleClassifier *ensembleClassifier;
-    Clustering *clustering;
-    NNClassifier *nnClassifier;
-
     DetectionResult *detectionResult;
 
-    void propagateMembers();
+    //Components of Detector Cascade
+    //ForegroundDetector *foregroundDetector;
+    IVarianceFilter *varianceFilter;
+    IEnsembleClassifier *ensembleClassifier;
+    Clustering *clustering;
+    INNClassifier *nnClassifier;
 
-    DetectorCascade();
-    ~DetectorCascade();
-
-    void init();
-
-    void initWindowOffsets();
-    void initWindowsAndScales();
-
-    void release();
-    void cleanPreviousData();
-    void detect(const cv::Mat &img);
+    virtual void init() = 0;
+    virtual void initWindowOffsets() = 0;
+    virtual void initWindowsAndScales() = 0;
+    virtual void propagateMembers() = 0;
+    virtual void release() = 0;						
+    virtual void cleanPreviousData() = 0;			
+    virtual void detect(const cv::Mat &img) = 0;	
 };
 
 } /* namespace tld */
-#endif /* DETECTORCASCADE_H_ */
+#endif /* IDETECTORCASCADE_H_ */

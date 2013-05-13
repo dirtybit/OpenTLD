@@ -30,7 +30,7 @@
 #include <opencv/cv.h>
 
 #include "MedianFlowTracker.h"
-#include "DetectorCascade.h"
+#include "IDetectorCascade.h"
 
 namespace tld
 {
@@ -48,8 +48,8 @@ public:
     bool alternating;
 
     MedianFlowTracker *medianFlowTracker;
-    DetectorCascade *detectorCascade;
-    NNClassifier *nnClassifier;
+    IDetectorCascade *detectorCascade;
+    INNClassifier *nnClassifier;
     bool valid;
     bool wasValid;
     cv::Mat prevImg;

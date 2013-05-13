@@ -27,9 +27,11 @@
 
 #include <iostream>
 
-#include "NNClassifier.h"
+#include "INNClassifier.h"
 #include "TLDUtil.h"
 #include "Timing.h"
+#include "DetectorCascade.h"
+
 
 using namespace std;
 using namespace cv;
@@ -49,6 +51,7 @@ TLD::TLD()
     currBB = prevBB = NULL;
 
     detectorCascade = new DetectorCascade();
+
     nnClassifier = detectorCascade->nnClassifier;
 
     medianFlowTracker = new MedianFlowTracker();
@@ -385,8 +388,8 @@ typedef struct
 
 void TLD::writeToFile(const char *path)
 {
-    NNClassifier *nn = detectorCascade->nnClassifier;
-    EnsembleClassifier *ec = detectorCascade->ensembleClassifier;
+    INNClassifier *nn = detectorCascade->nnClassifier;
+    IEnsembleClassifier *ec = detectorCascade->ensembleClassifier;
 
     FILE *file = fopen(path, "w");
     fprintf(file, "#Tld ModelExport\n");
@@ -478,8 +481,8 @@ void TLD::readFromFile(const char *path)
 {
     release();
 
-    NNClassifier *nn = detectorCascade->nnClassifier;
-    EnsembleClassifier *ec = detectorCascade->ensembleClassifier;
+    INNClassifier *nn = detectorCascade->nnClassifier;
+    IEnsembleClassifier *ec = detectorCascade->ensembleClassifier;
 
     FILE *file = fopen(path, "r");
 

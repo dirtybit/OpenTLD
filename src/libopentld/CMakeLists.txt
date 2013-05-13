@@ -3,7 +3,7 @@ include_directories(imacq
 	mftracker
 	tld
 	tld/detector
-    ../3rdparty/cvblobs
+	../3rdparty/cvblobs
 	${OpenCV_INCLUDE_DIRS})
 
 
@@ -32,11 +32,15 @@ set(SRC_FILES
 	mftracker/Median.h
 	tld/Clustering.h
 	tld/DetectionResult.h
-	tld/DetectorCascade.h
+	tld/IDetectorCascade.h
+	tld/IEnsembleClassifier.h
+	tld/INNClassifier.h
+	tld/IVarianceFilter.h
 	tld/MedianFlowTracker.h
 	tld/TLD.h
 	tld/TLDUtil.h
 	tld/Timing.h
+	tld/detector/DetectorCascade.h
 	tld/detector/EnsembleClassifier.h
 	tld/detector/ForegroundDetector.h
 	tld/detector/IntegralImage.h

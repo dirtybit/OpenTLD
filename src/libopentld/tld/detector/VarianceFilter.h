@@ -21,6 +21,9 @@
  *
  *  Created on: Nov 16, 2011
  *      Author: Georg Nebehay
+ *
+ *  Modified on: May 13, 2013
+ *      Author: Sertac Olgunsoylu
  */
 
 #ifndef VARIANCEFILTER_H_
@@ -28,25 +31,19 @@
 
 #include <opencv/cv.h>
 
+#include "IVarianceFilter.h"
 #include "IntegralImage.h"
 #include "DetectionResult.h"
 
 namespace tld
 {
 
-class VarianceFilter
+class VarianceFilter : public IVarianceFilter
 {
     IntegralImage<int>* integralImg;
     IntegralImage<long long>* integralImg_squared;
 
 public:
-    bool enabled;
-    int *windowOffsets;
-
-    DetectionResult *detectionResult;
-
-    float minVar;
-
     VarianceFilter();
     virtual ~VarianceFilter();
 

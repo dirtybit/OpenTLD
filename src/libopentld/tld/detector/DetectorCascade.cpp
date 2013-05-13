@@ -272,6 +272,10 @@ void DetectorCascade::detect(const Mat &img)
 {
     //For every bounding box, the output is confidence, pattern, variance
 
+    VarianceFilter * _varianceFilter = dynamic_cast<VarianceFilter *>(varianceFilter);
+    EnsembleClassifier * _ensembleClassifier = dynamic_cast<EnsembleClassifier *>(ensembleClassifier);
+    NNClassifier * _nnClassifier = dynamic_cast<NNClassifier *>(nnClassifier);
+
     detectionResult->reset();
 
     if(!initialised)
@@ -283,10 +287,10 @@ void DetectorCascade::detect(const Mat &img)
     //Prepare components
     //foregroundDetector->nextIteration(img); //Calculates foreground (DISABLED)
     getCPUTick(&procInit);
-    varianceFilter->nextIteration(img); //Calculates integral images
+    _varianceFilter->nextIteration(img); //Calculates integral images
     getCPUTick(&procFinal);
     PRINT_TIMING("IntegTime", procInit, procFinal, ", ");
-    ensembleClassifier->nextIteration(img);
+    _ensembleClassifier->nextIteration(img);
     getCPUTick(&procInit);
 
     //#pragma omp parallel for
@@ -322,18 +326,18 @@ void DetectorCascade::detect(const Mat &img)
         }
         */
 
-        if(!varianceFilter->filter(i))
+        if(!_varianceFilter->filter(i))
         {
             detectionResult->posteriors[i] = 0;
             continue;
         }
 
-        if(!ensembleClassifier->filter(i))
+        if(!_ensembleClassifier->filter(i))
         {
             continue;
         }
 
-        if(!nnClassifier->filter(img, i))
+        if(!_nnClassifier->filter(img, i))
         {
             continue;
         }
