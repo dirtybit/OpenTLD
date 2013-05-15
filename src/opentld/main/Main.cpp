@@ -46,6 +46,14 @@ void Main::doWork()
     tld->detectorCascade->imgHeight = grey.rows;
     tld->detectorCascade->imgWidthStep = grey.step;
 
+#ifdef CUDA_ENABLED
+    tld->learningEnabled = false;
+    selectManually = false;
+
+    if(tld->learningEnabled || selectManually)
+        std::cerr << "Sorry. Learning and manual object selection is not supported with CUDA implementation yet!!!" << std::endl;
+#endif
+
 	if(showTrajectory)
 	{
 		trajectory.init(trajectoryLength);
