@@ -1,3 +1,4 @@
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-gencode arch=compute_20,code=sm_20)
 
 include_directories(imacq
 	mftracker
@@ -50,8 +51,13 @@ set(SRC_FILES
 
 
 if(CUDA_ENABLED)
-	include_directories(${CUDA_INCLUDE_DIRS})
-	#set(CUDA_SRC_FILES opentld.cu)
+	include_directories(${CUDA_INCLUDE_DIRS} tld/detector/cuda)
+	set(CUDA_SRC_FILES
+		tld/detector/cuda/CuVarianceFilter.cpp
+		tld/detector/cuda/CuDetectorCascade.cpp
+		tld/detector/cuda/CuVarianceFilter.h
+		tld/detector/cuda/CuDetectorCascade.h
+		tld/detector/cuda/varianceFilter.cu)
 	set(SRC_FILES ${SRC_FILES} ${CUDA_SRC_FILES})
 	cuda_add_library(libopentld ${SRC_FILES})
 else(CUDA_ENABLED)

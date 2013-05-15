@@ -30,7 +30,12 @@
 #include "INNClassifier.h"
 #include "TLDUtil.h"
 #include "Timing.h"
+
+#ifdef CUDA_ENABLED
+#include "CuDetectorCascade.h"
+#else
 #include "DetectorCascade.h"
+#endif
 
 
 using namespace std;
@@ -50,8 +55,11 @@ TLD::TLD()
     learning = false;
     currBB = prevBB = NULL;
 
+#ifdef CUDA_ENABLED
+    detectorCascade = new cuda::CuDetectorCascade();
+#else
     detectorCascade = new DetectorCascade();
-
+#endif
     nnClassifier = detectorCascade->nnClassifier;
 
     medianFlowTracker = new MedianFlowTracker();

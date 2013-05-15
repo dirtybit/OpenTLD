@@ -1,4 +1,4 @@
-/*  Copyright 2011 AIT Austrian Institute of Technology
+/*  Copyright (c) 2013 Sertac Olgunsoylu
 *
 *   This file is part of OpenTLD.
 *
@@ -17,14 +17,7 @@
 *
 */
 
-/*
- * DetectorCascade.cpp
- *
- *  Created on: Nov 16, 2011
- *      Author: Georg Nebehay
- */
-
-#include "DetectorCascade.h"
+#include "CuDetectorCascade.h"
 
 #include <algorithm>
 
@@ -33,10 +26,15 @@
 
 using namespace cv;
 
+extern int * createIndexArray(int numWindows);
+
 namespace tld
 {
 
-DetectorCascade::DetectorCascade()
+namespace cuda
+{
+
+CuDetectorCascade::CuDetectorCascade()
 {
     objWidth = -1; //MUST be set before calling init
     objHeight = -1; //MUST be set before calling init
@@ -54,17 +52,19 @@ DetectorCascade::DetectorCascade()
     numFeatures = 10;
 
     initialised = false;
+    windows_d = NULL;
 
     //foregroundDetector = new ForegroundDetector();
-    varianceFilter = new VarianceFilter();
+    varianceFilter = new CuVarianceFilter();
     ensembleClassifier = new EnsembleClassifier();
     nnClassifier = new NNClassifier();
+
     clustering = new Clustering();
 
     detectionResult = new DetectionResult();
 }
 
-DetectorCascade::~DetectorCascade()
+CuDetectorCascade::~CuDetectorCascade()
 {
     release();
 
@@ -75,7 +75,7 @@ DetectorCascade::~DetectorCascade()
     delete detectionResult;
 }
 
-void DetectorCascade::init()
+void CuDetectorCascade::init()
 {
     if(imgWidth == -1 || imgHeight == -1 || imgWidthStep == -1 || objWidth == -1 || objHeight == -1)
     {
@@ -92,8 +92,8 @@ void DetectorCascade::init()
     initialised = true;
 }
 
-//TODO: This is error-prone. Better give components a reference to DetectorCascade?
-void DetectorCascade::propagateMembers()
+//TODO: This is error-prone. Better give components a reference to CuDetectorCascade?
+void CuDetectorCascade::propagateMembers()
 {
     detectionResult->init(numWindows, numTrees);
 
@@ -115,9 +115,12 @@ void DetectorCascade::propagateMembers()
     ensembleClassifier->detectionResult = detectionResult;
     nnClassifier->detectionResult = detectionResult;
     clustering->detectionResult = detectionResult;
+
+    CuVarianceFilter *cuVarFilter = dynamic_cast<CuVarianceFilter *>(varianceFilter);
+    cuVarFilter->windows_d = windows_d;
 }
 
-void DetectorCascade::release()
+void CuDetectorCascade::release()
 {
     if(!initialised)
     {
@@ -142,13 +145,16 @@ void DetectorCascade::release()
     delete[] windowOffsets;
     windowOffsets = NULL;
 
+    if(windows_d)
+        cudaFree(windows_d);
+
     objWidth = -1;
     objHeight = -1;
 
     detectionResult->release();
 }
 
-void DetectorCascade::cleanPreviousData()
+void CuDetectorCascade::cleanPreviousData()
 {
     detectionResult->reset();
 }
@@ -158,7 +164,7 @@ void DetectorCascade::cleanPreviousData()
  * scales are stored using the format <w h>
  *
  */
-void DetectorCascade::initWindowsAndScales()
+void CuDetectorCascade::initWindowsAndScales()
 {
 
     int scanAreaX = 1; // It is important to start with 1/1, because the integral images aren't defined at pos(-1,-1) due to speed reasons
@@ -238,13 +244,16 @@ void DetectorCascade::initWindowsAndScales()
 
     }
 
+    cudaMalloc((void **) &windows_d, TLD_WINDOW_SIZE * numWindows * sizeof(int));
+    cudaMemcpy(windows_d, windows, TLD_WINDOW_SIZE * numWindows * sizeof(int), cudaMemcpyHostToDevice);
+
     assert(windowIndex == numWindows);
 }
 
 //Creates offsets that can be added to bounding boxes
 //offsets are contained in the form delta11, delta12,... (combined index of dw and dh)
 //Order: scale->tree->feature
-void DetectorCascade::initWindowOffsets()
+void CuDetectorCascade::initWindowOffsets()
 {
 
     windowOffsets = new int[TLD_WINDOW_OFFSET_SIZE * numWindows];
@@ -265,32 +274,45 @@ void DetectorCascade::initWindowOffsets()
     }
 }
 
-void DetectorCascade::detect(const Mat &img)
+void CuDetectorCascade::detect(const Mat &img)
 {
-    //For every bounding box, the output is confidence, pattern, variance
-
-    VarianceFilter * _varianceFilter = dynamic_cast<VarianceFilter *>(varianceFilter);
-    EnsembleClassifier * _ensembleClassifier = dynamic_cast<EnsembleClassifier *>(ensembleClassifier);
-    NNClassifier * _nnClassifier = dynamic_cast<NNClassifier *>(nnClassifier);
-
-    detectionResult->reset();
-
     if(!initialised)
     {
         return;
     }
 
-    tick_t procInit, procFinal;
+    CuVarianceFilter * _varianceFilter = dynamic_cast<CuVarianceFilter *>(varianceFilter);
+    EnsembleClassifier * _ensembleClassifier = dynamic_cast<EnsembleClassifier *>(ensembleClassifier);
+    NNClassifier * _nnClassifier = dynamic_cast<NNClassifier *>(nnClassifier);
+
+    detectionResult->reset();
+
+    cv::gpu::GpuMat gpuImg(img);
+
+    int * d_inWinIndices = createIndexArray(numWindows);
+
+    int numInWins = numWindows;
+    std::cout << "numInWins: " << numInWins;
+    _varianceFilter->filter(gpuImg, d_inWinIndices, numInWins);
+    std::cout << " - numInWins*: " << numInWins << " ";
+
+    //
+
+    /*tick_t procInit, procFinal;
     //Prepare components
     //foregroundDetector->nextIteration(img); //Calculates foreground (DISABLED)
     getCPUTick(&procInit);
-    _varianceFilter->nextIteration(img); //Calculates integral images
+
+    _varianceFilter->filter(gpuImg); //Calculates integral images
+
     getCPUTick(&procFinal);
     PRINT_TIMING("IntegTime", procInit, procFinal, ", ");
+
     _ensembleClassifier->nextIteration(img);
+
     getCPUTick(&procInit);
 
-    //#pragma omp parallel for
+    #pragma omp parallel for
 
     for(int i = 0; i < numWindows; i++)
     {        
@@ -321,7 +343,7 @@ void DetectorCascade::detect(const Mat &img)
                 continue;
             }
         }
-        */
+
 
         if(!_varianceFilter->filter(i))
         {
@@ -345,11 +367,13 @@ void DetectorCascade::detect(const Mat &img)
     }
     getCPUTick(&procFinal);
     PRINT_TIMING("ClsfyTime", procInit, procFinal, ", ");
-
+    */
     //Cluster
     clustering->clusterConfidentIndices();
 
     detectionResult->containsValidData = true;
 }
+
+} /* namespace cuda */
 
 } /* namespace tld */

@@ -41,6 +41,9 @@ namespace tld
 static const int TLD_WINDOW_SIZE = 5;
 static const int TLD_WINDOW_OFFSET_SIZE = 6;
 
+//TODO: Convert this to a function
+#define sub2idx(x,y,imgWidthStep) ((int) (floor((x)+0.5) + floor((y)+0.5)*(imgWidthStep)))
+
 class IDetectorCascade
 {
 protected:
