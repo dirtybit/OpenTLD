@@ -21,24 +21,10 @@
 #undef __SSE2__
 
 #include "CUDA.h"
-#include <thrust/remove.h>
 #include <thrust/sequence.h>
+#include <thrust/remove.h>
 #include <thrust/device_ptr.h>
-#include "stdio.h"
 #include <opencv2/gpu/gpu.hpp>
-
-const int TLD_WINDOW_SIZE = 5;
-
-#define BLOCK_SIZE 192
-
-struct is_negative
-{
-    __host__ __device__
-    bool operator()(const int x)
-        {
-            return x < 0;
-        }
-};
 
 void createIndexArray(int * idxArr, int n) {
     thrust::device_ptr<int> dev_ptr;
@@ -79,8 +65,8 @@ void cudaVarianceFilter(cv::gpu::GpuMat integralImg, cv::gpu::GpuMat integralImg
 {
     cudaEvent_t finished;
     cudaEventCreate(&finished);
-    dim3 gridSize(ceil(numInWins / (float)BLOCK_SIZE));
-    dim3 blockSize(BLOCK_SIZE);
+    dim3 gridSize(ceil(numInWins / (float)VAR_FILT_BLOCK_SIZE));
+    dim3 blockSize(VAR_FILT_BLOCK_SIZE);
     __cudaVarianceFilter<<<gridSize, blockSize>>>(integralImg, integralImg_squared, windows_d, d_inWinIndices, numInWins, minVar);
     cudaCheckErrors(0);
     cudaEventRecord(finished);

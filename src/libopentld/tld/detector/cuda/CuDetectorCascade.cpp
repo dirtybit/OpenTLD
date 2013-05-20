@@ -57,7 +57,7 @@ CuDetectorCascade::CuDetectorCascade()
 
     //foregroundDetector = new ForegroundDetector();
     varianceFilter = new CuVarianceFilter();
-    ensembleClassifier = new EnsembleClassifier();
+    ensembleClassifier = new CuEnsembleClassifier();
     nnClassifier = new NNClassifier();
 
     clustering = new Clustering();
@@ -105,6 +105,7 @@ void CuDetectorCascade::propagateMembers()
     ensembleClassifier->scales = scales;
     ensembleClassifier->numFeatures = numFeatures;
     ensembleClassifier->numTrees = numTrees;
+    dynamic_cast<CuEnsembleClassifier *>(ensembleClassifier)->numWindows = numWindows;
     nnClassifier->windows = windows;
     clustering->windows = windows;
     clustering->numWindows = numWindows;
@@ -117,8 +118,8 @@ void CuDetectorCascade::propagateMembers()
     nnClassifier->detectionResult = detectionResult;
     clustering->detectionResult = detectionResult;
 
-    CuVarianceFilter *cuVarFilter = dynamic_cast<CuVarianceFilter *>(varianceFilter);
-    cuVarFilter->windows_d = windows_d;
+    dynamic_cast<CuVarianceFilter *>(varianceFilter)->windows_d = windows_d;
+    dynamic_cast<CuEnsembleClassifier *>(ensembleClassifier)->windows_d = windows_d;
 }
 
 void CuDetectorCascade::release()
@@ -285,9 +286,7 @@ void CuDetectorCascade::detect(const Mat &img)
     }
 
     tick_t procInit, procFinal;
-    CuVarianceFilter * _varianceFilter = dynamic_cast<CuVarianceFilter *>(varianceFilter);
-    EnsembleClassifier * _ensembleClassifier = dynamic_cast<EnsembleClassifier *>(ensembleClassifier);
-    NNClassifier * _nnClassifier = dynamic_cast<NNClassifier *>(nnClassifier);
+    //NNClassifier * _nnClassifier = dynamic_cast<NNClassifier *>(nnClassifier);
 
     detectionResult->reset();
 
@@ -296,8 +295,13 @@ void CuDetectorCascade::detect(const Mat &img)
     createIndexArray(d_inWinIndices, numWindows);
 
     int numInWins = numWindows;
-    _varianceFilter->filter(gpuImg, d_inWinIndices, numInWins);
-    std::cout << numWindows << " - " << numInWins << " ";
+    dynamic_cast<CuVarianceFilter *>(varianceFilter)->filter(gpuImg, d_inWinIndices, numInWins);
+    std::cout << numWindows << " - " << numInWins << " | ";
+
+    std::cout << numInWins;
+    dynamic_cast<CuEnsembleClassifier *>(ensembleClassifier)->filter(gpuImg, d_inWinIndices, numInWins);
+    std::cout << " - " << numInWins << " ";
+
     getCPUTick(&procFinal);
     PRINT_TIMING("ClsfyTime", procInit, procFinal, ", ");
 

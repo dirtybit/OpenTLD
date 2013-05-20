@@ -57,12 +57,15 @@ if(CUDA_ENABLED)
 	set(CUDA_SRC_FILES
 		tld/detector/cuda/CuVarianceFilter.cpp
 		tld/detector/cuda/CuDetectorCascade.cpp
+		tld/detector/cuda/CuEnsembleClassifier.cpp
 		tld/detector/cuda/CUDA.h
 		tld/detector/cuda/CuVarianceFilter.h
 		tld/detector/cuda/CuDetectorCascade.h
+		tld/detector/cuda/CuEnsembleClassifier.h
 		tld/detector/cuda/npp/NPP_staging.hpp
 		tld/detector/cuda/npp/NCV.hpp
 		tld/detector/cuda/varianceFilter.cu
+		tld/detector/cuda/ensembleClassifier.cu
 		tld/detector/cuda/npp/NPP_staging.cu
 		tld/detector/cuda/npp/NCV.cu)
 	set(SRC_FILES ${SRC_FILES} ${CUDA_SRC_FILES})

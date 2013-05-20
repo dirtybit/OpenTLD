@@ -17,17 +17,15 @@
 *
 */
 
-#ifndef CU_DETECTORCASCADE_H_
-#define CU_DETECTORCASCADE_H_
+#ifndef _CU_ENSEMBLECLASSIFIER_H_
+#define _CU_ENSEMBLECLASSIFIER_H_
 
-#include "CUDA.h"
+#include <opencv/cv.h>
+#include <opencv2/gpu/gpu.hpp>
 
-#include "IDetectorCascade.h"
-#include "CuVarianceFilter.h"
-#include "CuEnsembleClassifier.h"
-#include "Clustering.h"
-#include "NNClassifier.h"
+#include "IEnsembleClassifier.h"
 
+using namespace cv::gpu;
 
 namespace tld
 {
@@ -35,26 +33,29 @@ namespace tld
 namespace cuda
 {
 
-class CuDetectorCascade : public IDetectorCascade
+class CuEnsembleClassifier : public IEnsembleClassifier
 {
-    int *windows_d;
-    int * d_inWinIndices;
-
 public:
-    CuDetectorCascade();
-    ~CuDetectorCascade();
+    int *windows_d;
+    float *features_d;
+    float *posteriors_d;
+    float *confidences_d;
+    int numWindows;
 
+    CuEnsembleClassifier();
+    virtual ~CuEnsembleClassifier();
     void init();
-    void initWindowOffsets();
-    void initWindowsAndScales();
-    void propagateMembers();
+    void initGPU();
+    void initFeatureLocations();
+    void initFeatureOffsets();
+    void initPosteriors();
     void release();
-    void cleanPreviousData();
-    void detect(const cv::Mat &img);
-    void setImgSize(int w, int h, int step);
+    void updatePosterior(int treeIdx, int idx, int positive, int amount);
+    void learn(int *boundary, int positive, int *featureVector);
+    void filter(const GpuMat &img, int *d_inWinIndices, int &numInWins);
 };
 
 } /* namespace cuda */
 
 } /* namespace tld */
-#endif /* CU_DETECTORCASCADE_H_ */
+#endif /* _CU_ENSEMBLECLASSIFIER_H_ */
