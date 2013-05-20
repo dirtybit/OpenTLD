@@ -25,6 +25,15 @@ const int TLD_WINDOW_SIZE = 5;
         } while (0)
 #endif
 
+#define cudaCheckErrors(msg) \
+    do { \
+        cudaError_t __err = cudaGetLastError(); \
+        if(__err != cudaSuccess) { \
+            fprintf(stderr, "Error:%s:%d %s\n", __FILE__, __LINE__, cudaGetErrorString(__err)); \
+        if((msg)) \
+            exit(1); \
+        } \
+    } while (0)
 
 struct is_negative
 {

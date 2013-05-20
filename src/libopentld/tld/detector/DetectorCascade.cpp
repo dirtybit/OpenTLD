@@ -287,7 +287,7 @@ void DetectorCascade::detect(const Mat &img)
     _ensembleClassifier->nextIteration(img);
     getCPUTick(&procInit);
 
-    int j = 0;
+    int j = 0, k = 0;
     //#pragma omp parallel for
 
     for(int i = 0; i < numWindows; i++)
@@ -332,6 +332,7 @@ void DetectorCascade::detect(const Mat &img)
         {
             continue;
         }
+        k++;
 
         if(!_nnClassifier->filter(img, i))
         {
@@ -342,7 +343,7 @@ void DetectorCascade::detect(const Mat &img)
 
 
     }
-    std::cout << numWindows << " - " << j << " ";
+    std::cout << numWindows << " - " << j << " - " << k << " ";
     getCPUTick(&procFinal);
     PRINT_TIMING("ClsfyTime", procInit, procFinal, ", ");
 

@@ -29,72 +29,65 @@ __global__ void __calcTreeConfidence(cv::gpu::PtrStep<unsigned char> img, int *w
                                      int *d_inWinIndices, int numInWins, float *features_d,
                                      float *posteriors_d, float *confidences_d, int numTrees, int numFeatures, int numIndices)
 {
-    int idx = 2 * (blockDim.x * blockIdx.x + threadIdx.x);
-    int treeIdx = threadIdx.x;
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    int id = idx / 16;
 
-    if(threadIdx.x > 15) {
-        idx++;
-        treeIdx -= 16;
-    }
+    if(id < numInWins) {
+        int treeIdx = idx - id * 16;
+        int winIdx = d_inWinIndices[id];
 
-    if(idx >= numInWins)
-        return;
+        int * win = &windows_d[winIdx * TLD_WINDOW_SIZE];
+        int x = win[0];
+        int y = win[1];
+        int w = win[2];
+        int h = win[3];
 
-    int winIdx = d_inWinIndices[idx];
+        float * feature;
+        int fx1;
+        int fy1;
+        int fx2;
+        int fy2;
 
-    int * win = &windows_d[winIdx * TLD_WINDOW_SIZE];
-    int x = win[0];
-    int y = win[1];
-    int w = win[2];
-    int h = win[3];
+        int index = 0;
 
-    float * feature;
-    int fx1;
-    int fy1;
-    int fx2;
-    int fy2;
-
-    int index = 0;
-
-    for(int i = 0; i < numFeatures; i++)
-    {
-        feature = &features_d[4 * (numFeatures * treeIdx + i)];
-        fx1 = x + (w - 1) * feature[0];
-        fy1 = y + (h - 1) * feature[1];
-        fx2 = x + (w - 1) * feature[2];
-        fy2 = y + (h - 1) * feature[3];
-        index <<= 1;
-
-        int fp0 = img(fy1, fx1);
-        int fp1 = img(fy2, fx2);
-
-        if(fp0 > fp1)
+        for(int i = 0; i < numFeatures; i++)
         {
-            index |= 1;
+            feature = &features_d[4 * numFeatures * treeIdx + 4 * i];
+            fx1 = x + (w - 1) * feature[0];
+            fy1 = y + (h - 1) * feature[1];
+            fx2 = x + (w - 1) * feature[2];
+            fy2 = y + (h - 1) * feature[3];
+            index <<= 1;
+
+            int fp0 = img(fy1, fx1);
+            int fp1 = img(fy2, fx2);
+
+            if(fp0 > fp1)
+            {
+                index |= 1;
+            }
         }
+
+        float conf = posteriors_d[treeIdx * numIndices + index];
+        confidences_d[id * numTrees + treeIdx] = conf;
     }
-
-    float conf = posteriors_d[treeIdx * numIndices + index];
-
-    confidences_d[idx * numTrees + treeIdx] = conf;
-
 }
 
 __global__ void __classifyWindows(int *d_inWinIndices, int numInWins, float *confidences_d, int numTrees)
 {
-    float conf = 0.0;
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
 
-    if(idx >= numInWins)
-        return;
+    if(idx < numInWins) {
+        float conf = 0.0;
 
-    for(int i = 0; i < numTrees; i++)
-    {
-        conf += confidences_d[idx * numTrees + i];
+        for(int i = 0; i < numTrees; i++)
+        {
+            conf += confidences_d[idx * numTrees + i];
+        }
+
+        if(conf < 0.5)
+            d_inWinIndices[idx] = -1;
     }
-
-    if(conf < 0.5)
-        d_inWinIndices[idx] = -1;
 }
 
 
@@ -103,9 +96,10 @@ void cudaEnsembleClassifier(cv::gpu::GpuMat img, int *windows_d, int *d_inWinInd
 {
     cudaEvent_t finished;
     cudaEventCreate(&finished);
-    dim3 gridSize(ceil(numInWins / (float)ENS_CLS_BLOCK_SIZE));
+    dim3 gridSize((numInWins + 11)/12);
     dim3 blockSize(ENS_CLS_BLOCK_SIZE);
     __calcTreeConfidence<<<gridSize, blockSize>>>(img, windows_d, d_inWinIndices, numInWins, features_d, posteriors_d, confidences_d, numTrees, numFeatures, numIndices);
+    gridSize.x = (numInWins + ENS_CLS_BLOCK_SIZE - 1) / ENS_CLS_BLOCK_SIZE;
     __classifyWindows<<<gridSize, blockSize>>>(d_inWinIndices, numInWins, confidences_d, numTrees);
     cudaCheckErrors(0);
     cudaEventRecord(finished);

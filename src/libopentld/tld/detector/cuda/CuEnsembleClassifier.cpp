@@ -72,9 +72,9 @@ void CuEnsembleClassifier::initGPU()
     int posterior_size = numTrees * numIndices * sizeof(float);
     int confidences_size = numWindows * numTrees * sizeof(float);
 
-    cudaMalloc((void **) features_d, feature_size);
-    cudaMalloc((void **) posteriors_d, posterior_size);
-    cudaMalloc((void **) confidences_d, confidences_size);
+    cudaMalloc((void **) &features_d, feature_size);
+    cudaMalloc((void **) &posteriors_d, posterior_size);
+    cudaMalloc((void **) &confidences_d, confidences_size);
     cudaMemcpy(features_d, features, feature_size, cudaMemcpyHostToDevice);
     cudaMemcpy(posteriors_d, posteriors, posterior_size, cudaMemcpyHostToDevice);
 
