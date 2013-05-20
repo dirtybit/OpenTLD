@@ -20,8 +20,7 @@
 // Ugly work-around to resolve conflict between CUDA and SSE
 #undef __SSE2__
 
-#include "cuda.h"
-#include "device_launch_parameters.h"
+#include "CUDA.h"
 #include <thrust/remove.h>
 #include <thrust/sequence.h>
 #include <thrust/device_ptr.h>
@@ -32,27 +31,23 @@ const int TLD_WINDOW_SIZE = 5;
 
 #define BLOCK_SIZE 192
 
-struct not_negative
+struct is_negative
 {
     __host__ __device__
     bool operator()(const int x)
         {
-            return x >= 0;
+            return x < 0;
         }
 };
 
-int * createIndexArray(int n) {
-    int * idxArr;
+void createIndexArray(int * idxArr, int n) {
     thrust::device_ptr<int> dev_ptr;
 
-    cudaMalloc((void **) &idxArr, sizeof(int) * n);
     dev_ptr = thrust::device_pointer_cast(idxArr);
     thrust::sequence(dev_ptr, dev_ptr + n);
-
-    return idxArr;
 }
 
-__global__ void __cudaVarianceFilter(cv::gpu::PtrStepSz<int> integralImg, cv::gpu::PtrStep<double> integralImg_squared,
+__global__ void __cudaVarianceFilter(cv::gpu::PtrStep<int> integralImg, cv::gpu::PtrStep<unsigned long long> integralImg_squared,
                                      int * windows_d, int * d_inWinIndices, int numInWins, float minVar)
 {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -61,32 +56,36 @@ __global__ void __cudaVarianceFilter(cv::gpu::PtrStepSz<int> integralImg, cv::gp
         int winIdx = d_inWinIndices[idx];
         int * win = &windows_d[winIdx * TLD_WINDOW_SIZE];
 
+        int x1 = win[0]+1;
+        int y1 = win[1]+1;
         int w = win[2];
         int h = win[3];
-        int x1 = win[0];
-        int y1 = win[1];
         int x2 = x1 + w - 1;
         int y2 = y1 + h - 1;
-
         float area = w * h;
 
-        float mX  = (integralImg(y2, x2) - integralImg(y1, x2) - integralImg(y2, x1) + integralImg(y1, x1)) / area;
-        float mX2 = (integralImg_squared(y2, x2) - integralImg_squared(y1, x2) - integralImg_squared(y2, x1) + integralImg_squared(y1, x1)) / area;
-        float variance = mX;//2 - mX * mX;
+        float mX  = (integralImg(y2, x2) - integralImg(y1-1, x2) - integralImg(y2, x1-1) + integralImg(y1-1, x1-1)) / area;
+        unsigned long long l = (integralImg_squared(y2, x2) - integralImg_squared(y1-1, x2) - integralImg_squared(y2, x1-1) + integralImg_squared(y1-1, x1-1));
+        float mX2 = l / area;
+        float variance = mX2 - mX * mX;
 
         if(variance < minVar)
             d_inWinIndices[idx] = -1;
     }
 }
 
-void cudaVarianceFilter(cv::gpu::PtrStepSz<int> integralImg, cv::gpu::PtrStep<double> integralImg_squared,
+void cudaVarianceFilter(cv::gpu::GpuMat integralImg, cv::gpu::GpuMat integralImg_squared,
                                int * windows_d, int * d_inWinIndices, int &numInWins, float minVar)
 {
+    cudaEvent_t finished;
+    cudaEventCreate(&finished);
     dim3 gridSize(ceil(numInWins / (float)BLOCK_SIZE));
     dim3 blockSize(BLOCK_SIZE);
     __cudaVarianceFilter<<<gridSize, blockSize>>>(integralImg, integralImg_squared, windows_d, d_inWinIndices, numInWins, minVar);
-    cudaDeviceSynchronize();
-    /*thrust::device_ptr<int> idxArr = thrust::device_pointer_cast(d_inWinIndices);
-    thrust::device_ptr<int> end = thrust::remove_if(idxArr, idxArr + numInWins, not_negative());
-    numInWins = end - idxArr;*/
+    cudaCheckErrors(0);
+    cudaEventRecord(finished);
+    cudaEventSynchronize(finished);
+    thrust::device_ptr<int> idxArr = thrust::device_pointer_cast(d_inWinIndices);
+    thrust::device_ptr<int> end = thrust::remove_if(idxArr, idxArr + numInWins, is_negative());
+    numInWins = end - idxArr;
 }

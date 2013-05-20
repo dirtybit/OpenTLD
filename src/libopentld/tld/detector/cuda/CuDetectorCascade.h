@@ -20,8 +20,7 @@
 #ifndef CU_DETECTORCASCADE_H_
 #define CU_DETECTORCASCADE_H_
 
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
+#include "CUDA.h"
 
 #include "IDetectorCascade.h"
 #include "CuVarianceFilter.h"
@@ -39,6 +38,8 @@ namespace cuda
 class CuDetectorCascade : public IDetectorCascade
 {
     int *windows_d;
+    int * d_inWinIndices;
+
 public:
     CuDetectorCascade();
     ~CuDetectorCascade();
@@ -50,6 +51,7 @@ public:
     void release();
     void cleanPreviousData();
     void detect(const cv::Mat &img);
+    void setImgSize(int w, int h, int step);
 };
 
 } /* namespace cuda */

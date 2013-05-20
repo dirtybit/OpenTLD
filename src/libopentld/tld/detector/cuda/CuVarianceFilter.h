@@ -20,13 +20,13 @@
 #ifndef _CU_VARIANCEFILTER_H_
 #define _CU_VARIANCEFILTER_H_
 
-#include <thrust/device_ptr.h>
-
 #include <opencv/cv.h>
 #include <opencv2/gpu/gpu.hpp>
 
 #include "IVarianceFilter.h"
 #include "DetectionResult.h"
+
+using namespace cv::gpu;
 
 namespace tld
 {
@@ -36,6 +36,13 @@ namespace cuda
 
 class CuVarianceFilter : public IVarianceFilter
 {
+    GpuMat sqrIntegralImg;
+    GpuMat integralImg;
+
+    void integral(const GpuMat &src, GpuMat &sum);
+    void integralBuffered(const GpuMat &src, GpuMat &buffer, GpuMat &sum);
+    void sqrIntegral(const GpuMat &src, GpuMat &sqsum);
+
 public:
     int *windows_d;
 
@@ -43,6 +50,7 @@ public:
     virtual ~CuVarianceFilter();
 
     virtual void filter(const cv::gpu::GpuMat &img, int *d_inWinIndices, int &numInWins);
+    virtual void setImgSize(int w, int h);
 };
 
 } /* namespace cuda */

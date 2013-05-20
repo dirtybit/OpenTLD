@@ -283,13 +283,11 @@ void DetectorCascade::detect(const Mat &img)
     tick_t procInit, procFinal;
     //Prepare components
     //foregroundDetector->nextIteration(img); //Calculates foreground (DISABLED)
-    getCPUTick(&procInit);
     _varianceFilter->nextIteration(img); //Calculates integral images
-    getCPUTick(&procFinal);
-    PRINT_TIMING("IntegTime", procInit, procFinal, ", ");
     _ensembleClassifier->nextIteration(img);
     getCPUTick(&procInit);
 
+    int j = 0;
     //#pragma omp parallel for
 
     for(int i = 0; i < numWindows; i++)
@@ -328,6 +326,7 @@ void DetectorCascade::detect(const Mat &img)
             detectionResult->posteriors[i] = 0;
             continue;
         }
+        j++;
 
         if(!_ensembleClassifier->filter(i))
         {
@@ -343,6 +342,7 @@ void DetectorCascade::detect(const Mat &img)
 
 
     }
+    std::cout << numWindows << " - " << j << " ";
     getCPUTick(&procFinal);
     PRINT_TIMING("ClsfyTime", procInit, procFinal, ", ");
 

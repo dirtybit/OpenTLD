@@ -42,9 +42,7 @@ void Main::doWork()
     Mat grey(img->height, img->width, CV_8UC1);
     cvtColor(cv::Mat(img), grey, CV_BGR2GRAY);
 
-    tld->detectorCascade->imgWidth = grey.cols;
-    tld->detectorCascade->imgHeight = grey.rows;
-    tld->detectorCascade->imgWidthStep = grey.step;
+    tld->detectorCascade->setImgSize(grey.cols, grey.rows, grey.step);
 
 #ifdef CUDA_ENABLED
     tld->learningEnabled = false;

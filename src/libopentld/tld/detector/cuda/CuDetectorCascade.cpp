@@ -26,7 +26,7 @@
 
 using namespace cv;
 
-extern int * createIndexArray(int numWindows);
+extern void createIndexArray(int *idxArr, int numWindows);
 
 namespace tld
 {
@@ -53,6 +53,7 @@ CuDetectorCascade::CuDetectorCascade()
 
     initialised = false;
     windows_d = NULL;
+    d_inWinIndices = NULL;
 
     //foregroundDetector = new ForegroundDetector();
     varianceFilter = new CuVarianceFilter();
@@ -247,6 +248,8 @@ void CuDetectorCascade::initWindowsAndScales()
     cudaMalloc((void **) &windows_d, TLD_WINDOW_SIZE * numWindows * sizeof(int));
     cudaMemcpy(windows_d, windows, TLD_WINDOW_SIZE * numWindows * sizeof(int), cudaMemcpyHostToDevice);
 
+    cudaMalloc((void **) &d_inWinIndices, numWindows * sizeof(int));
+
     assert(windowIndex == numWindows);
 }
 
@@ -281,27 +284,26 @@ void CuDetectorCascade::detect(const Mat &img)
         return;
     }
 
+    tick_t procInit, procFinal;
     CuVarianceFilter * _varianceFilter = dynamic_cast<CuVarianceFilter *>(varianceFilter);
     EnsembleClassifier * _ensembleClassifier = dynamic_cast<EnsembleClassifier *>(ensembleClassifier);
     NNClassifier * _nnClassifier = dynamic_cast<NNClassifier *>(nnClassifier);
 
     detectionResult->reset();
 
-    cv::gpu::GpuMat gpuImg(img);
-
-    int * d_inWinIndices = createIndexArray(numWindows);
+    getCPUTick(&procInit);
+    cv::gpu::GpuMat gpuImg(img);    
+    createIndexArray(d_inWinIndices, numWindows);
 
     int numInWins = numWindows;
-    std::cout << "numInWins: " << numInWins;
     _varianceFilter->filter(gpuImg, d_inWinIndices, numInWins);
-    std::cout << " - numInWins*: " << numInWins << " ";
+    std::cout << numWindows << " - " << numInWins << " ";
+    getCPUTick(&procFinal);
+    PRINT_TIMING("ClsfyTime", procInit, procFinal, ", ");
 
-    //
-
-    /*tick_t procInit, procFinal;
+    /*
     //Prepare components
     //foregroundDetector->nextIteration(img); //Calculates foreground (DISABLED)
-    getCPUTick(&procInit);
 
     _varianceFilter->filter(gpuImg); //Calculates integral images
 
@@ -372,6 +374,15 @@ void CuDetectorCascade::detect(const Mat &img)
     clustering->clusterConfidentIndices();
 
     detectionResult->containsValidData = true;
+}
+
+void CuDetectorCascade::setImgSize(int w, int h, int step)
+{
+    imgWidth = w;
+    imgHeight = h;
+    imgWidthStep = step;
+
+    dynamic_cast<CuVarianceFilter *>(varianceFilter)->setImgSize(w, h);
 }
 
 } /* namespace cuda */
