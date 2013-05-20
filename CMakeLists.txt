@@ -52,6 +52,10 @@ if(NOT CMAKE_BUILD_TYPE)
         FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
+if((CMAKE_BUILD_TYPE MATCHES Release) AND CUDA_ENABLED)
+	add_definitions(-DNO_ERROR_CHECK)
+endif((CMAKE_BUILD_TYPE MATCHES Release) AND CUDA_ENABLED)
+
 option(CUDA_ENABLED "Build with CUDA acceleration enabled." OFF)
 option(BUILD_QOPENTLD "Build with Qt-config-dialog." OFF)
 option(USE_SYSTEM_LIBS "Use the installed version of libconfig++." OFF)
