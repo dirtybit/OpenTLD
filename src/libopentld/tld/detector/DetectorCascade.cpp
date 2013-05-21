@@ -288,7 +288,7 @@ void DetectorCascade::detect(const Mat &img)
     getCPUTick(&procInit);
 
     int j = 0, k = 0;
-    //#pragma omp parallel for
+    #pragma omp parallel for
 
     for(int i = 0; i < numWindows; i++)
     {        

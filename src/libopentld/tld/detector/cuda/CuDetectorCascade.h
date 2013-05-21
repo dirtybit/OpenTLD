@@ -39,6 +39,7 @@ class CuDetectorCascade : public IDetectorCascade
 {
     int *windows_d;
     int * d_inWinIndices;
+    int * qualifiedWins;
 
 public:
     CuDetectorCascade();

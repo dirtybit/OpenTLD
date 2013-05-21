@@ -123,7 +123,10 @@ void TLD::processImage(const Mat &img)
 
     if(trackerEnabled)
     {
+        getCPUTick(&procInit);
         medianFlowTracker->track(prevImg, currImg, prevBB);
+        getCPUTick(&procFinal);
+        PRINT_TIMING("TrackTime", procInit, procFinal, ", ");
     }
 
     if(detectorEnabled && (!alternating || medianFlowTracker->trackerBB == NULL))

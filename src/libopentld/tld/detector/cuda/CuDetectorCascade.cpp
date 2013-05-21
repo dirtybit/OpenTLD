@@ -146,6 +146,8 @@ void CuDetectorCascade::release()
     windows = NULL;
     delete[] windowOffsets;
     windowOffsets = NULL;
+    delete[] qualifiedWins;
+    qualifiedWins = NULL;
 
     if(windows_d)
         cudaFree(windows_d);
@@ -248,8 +250,8 @@ void CuDetectorCascade::initWindowsAndScales()
 
     cudaMalloc((void **) &windows_d, TLD_WINDOW_SIZE * numWindows * sizeof(int));
     cudaMemcpy(windows_d, windows, TLD_WINDOW_SIZE * numWindows * sizeof(int), cudaMemcpyHostToDevice);
-
     cudaMalloc((void **) &d_inWinIndices, numWindows * sizeof(int));
+    qualifiedWins = new int[numWindows];
 
     assert(windowIndex == numWindows);
 }
@@ -286,7 +288,7 @@ void CuDetectorCascade::detect(const Mat &img)
     }
 
     tick_t procInit, procFinal;
-    //NNClassifier * _nnClassifier = dynamic_cast<NNClassifier *>(nnClassifier);
+    NNClassifier * _nnClassifier = dynamic_cast<NNClassifier *>(nnClassifier);
 
     detectionResult->reset();
 
@@ -296,84 +298,24 @@ void CuDetectorCascade::detect(const Mat &img)
 
     int numInWins = numWindows;
     dynamic_cast<CuVarianceFilter *>(varianceFilter)->filter(gpuImg, d_inWinIndices, numInWins);
-    std::cout << numWindows << " - " << numInWins << " | ";
+    dynamic_cast<CuEnsembleClassifier *>(ensembleClassifier)->filter(gpuImg, d_inWinIndices, numInWins);    
 
-    std::cout << numInWins;
-    dynamic_cast<CuEnsembleClassifier *>(ensembleClassifier)->filter(gpuImg, d_inWinIndices, numInWins);
-    std::cout << " - " << numInWins << " ";
+    cudaMemcpy(qualifiedWins, d_inWinIndices, numInWins * sizeof(int), cudaMemcpyDeviceToHost);
 
-    getCPUTick(&procFinal);
-    PRINT_TIMING("ClsfyTime", procInit, procFinal, ", ");
-
-    /*
-    //Prepare components
-    //foregroundDetector->nextIteration(img); //Calculates foreground (DISABLED)
-
-    _varianceFilter->filter(gpuImg); //Calculates integral images
-
-    getCPUTick(&procFinal);
-    PRINT_TIMING("IntegTime", procInit, procFinal, ", ");
-
-    _ensembleClassifier->nextIteration(img);
-
-    getCPUTick(&procInit);
-
-    #pragma omp parallel for
-
-    for(int i = 0; i < numWindows; i++)
-    {        
-        /*
-         * Foreground detection disabled
-         *
-        int *window = &windows[TLD_WINDOW_SIZE * i];
-
-        if(foregroundDetector->isActive())
-        {
-            bool isInside = false;
-
-            for(size_t j = 0; j < detectionResult->fgList->size(); j++)
-            {
-
-                int bgBox[4];
-                tldRectToArray(detectionResult->fgList->at(j), bgBox);
-
-                if(tldIsInside(window, bgBox))  //TODO: This is inefficient and should be replaced by a quadtree
-                {
-                    isInside = true;
-                }
-            }
-
-            if(!isInside)
-            {
-                detectionResult->posteriors[i] = 0;
-                continue;
-            }
-        }
-
-
-        if(!_varianceFilter->filter(i))
-        {
-            detectionResult->posteriors[i] = 0;
-            continue;
-        }
-
-        if(!_ensembleClassifier->filter(i))
+    for(int i = 0; i < numInWins; i++)
+    {
+        int winIdx = qualifiedWins[i];
+        if(!_nnClassifier->filter(img, winIdx))
         {
             continue;
         }
 
-        if(!_nnClassifier->filter(img, i))
-        {
-            continue;
-        }
-
-        detectionResult->confidentIndices->push_back(i);
-
-
+        detectionResult->confidentIndices->push_back(winIdx);
     }
+
     getCPUTick(&procFinal);
     PRINT_TIMING("ClsfyTime", procInit, procFinal, ", ");
-    */
+
     //Cluster
     clustering->clusterConfidentIndices();
 
