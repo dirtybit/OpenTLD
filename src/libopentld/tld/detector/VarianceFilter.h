@@ -16,57 +16,42 @@
 *   along with OpenTLD.  If not, see <http://www.gnu.org/licenses/>.
 *
 */
-
 /*
- * TLD.h
+ * VarianceFilter.h
  *
- *  Created on: Nov 17, 2011
+ *  Created on: Nov 16, 2011
  *      Author: Georg Nebehay
+ *
+ *  Modified on: May 13, 2013
+ *      Author: Sertac Olgunsoylu
  */
 
-#ifndef TLD_H_
-#define TLD_H_
+#ifndef VARIANCEFILTER_H_
+#define VARIANCEFILTER_H_
 
 #include <opencv/cv.h>
 
-#include "MedianFlowTracker.h"
-#include "IDetectorCascade.h"
+#include "IVarianceFilter.h"
+#include "IntegralImage.h"
+#include "DetectionResult.h"
 
 namespace tld
 {
 
-class TLD
+class VarianceFilter : public IVarianceFilter
 {
-    void storeCurrentData();
-    void fuseHypotheses();
-    void learn();
-    void initialLearning();
+    IntegralImage<int>* integralImg;
+    IntegralImage<long long>* integralImg_squared;
+
 public:
-    bool trackerEnabled;
-    bool detectorEnabled;
-    bool learningEnabled;
-    bool alternating;
+    VarianceFilter();
+    virtual ~VarianceFilter();
 
-    MedianFlowTracker *medianFlowTracker;
-    IDetectorCascade *detectorCascade;
-    INNClassifier *nnClassifier;
-    bool valid;
-    bool wasValid;
-    cv::Mat prevImg;
-    cv::Mat currImg;
-    cv::Rect *prevBB;
-    cv::Rect *currBB;
-    float currConf;
-    bool learning;
-
-    TLD();
-    virtual ~TLD();
     void release();
-    void selectObject(const cv::Mat &img, cv::Rect *bb);
-    void processImage(const cv::Mat &img);
-    void writeToFile(const char *path);
-    void readFromFile(const char *path);
+    void nextIteration(const cv::Mat &img);
+    bool filter(int idx);
+    float calcVariance(int *off);
 };
 
 } /* namespace tld */
-#endif /* TLD_H_ */
+#endif /* VARIANCEFILTER_H_ */

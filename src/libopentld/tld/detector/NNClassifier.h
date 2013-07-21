@@ -21,6 +21,9 @@
  *
  *  Created on: Nov 16, 2011
  *      Author: Georg Nebehay
+ *
+ *  Modified on: May 13, 2013
+ *      Author: Sertac Olgunsoylu
  */
 
 #ifndef NNCLASSIFIER_H_
@@ -30,25 +33,17 @@
 
 #include <opencv/cv.h>
 
+#include "INNClassifier.h"
 #include "NormalizedPatch.h"
 #include "DetectionResult.h"
 
 namespace tld
 {
 
-class NNClassifier
+class NNClassifier : public INNClassifier
 {
     float ncc(float *f1, float *f2);
 public:
-    bool enabled;
-
-    int *windows;
-    float thetaFP;
-    float thetaTP;
-    DetectionResult *detectionResult;
-    std::vector<NormalizedPatch>* falsePositives;
-    std::vector<NormalizedPatch>* truePositives;
-
     NNClassifier();
     virtual ~NNClassifier();
 

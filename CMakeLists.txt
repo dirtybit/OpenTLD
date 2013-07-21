@@ -28,6 +28,11 @@ cmake_minimum_required(VERSION 2.6)
 
 find_package(OpenCV REQUIRED)
 
+if(CUDA_ENABLED)
+	find_package(CUDA 4.0 REQUIRED)
+	add_definitions(-DCUDA_ENABLED)
+endif(CUDA_ENABLED)
+
 if(BUILD_QOPENTLD)
     find_package(Qt4 REQUIRED)
 endif(BUILD_QOPENTLD)
@@ -47,6 +52,11 @@ if(NOT CMAKE_BUILD_TYPE)
         FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
+if((CMAKE_BUILD_TYPE MATCHES Release) AND CUDA_ENABLED)
+	add_definitions(-DNO_ERROR_CHECK)
+endif((CMAKE_BUILD_TYPE MATCHES Release) AND CUDA_ENABLED)
+
+option(CUDA_ENABLED "Build with CUDA acceleration enabled." OFF)
 option(BUILD_QOPENTLD "Build with Qt-config-dialog." OFF)
 option(USE_SYSTEM_LIBS "Use the installed version of libconfig++." OFF)
 

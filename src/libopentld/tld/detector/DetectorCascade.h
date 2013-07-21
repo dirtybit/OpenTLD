@@ -21,13 +21,17 @@
  *
  *  Created on: Nov 16, 2011
  *      Author: Georg Nebehay
+ *
+ *  Modified on: May 13, 2013
+ *      Author: Sertac Olgunsoylu
  */
 
 #ifndef DETECTORCASCADE_H_
 #define DETECTORCASCADE_H_
 
+#include "IDetectorCascade.h"
 #include "DetectionResult.h"
-#include "ForegroundDetector.h"
+//#include "ForegroundDetector.h"
 #include "VarianceFilter.h"
 #include "EnsembleClassifier.h"
 #include "Clustering.h"
@@ -37,61 +41,20 @@
 namespace tld
 {
 
-//Constants
-static const int TLD_WINDOW_SIZE = 5;
-static const int TLD_WINDOW_OFFSET_SIZE = 6;
-
-class DetectorCascade
+class DetectorCascade : public IDetectorCascade
 {
-    //Working data
-    int numScales;
-    cv::Size *scales;
 public:
-    //Configurable members
-    int minScale;
-    int maxScale;
-    bool useShift;
-    float shift;
-    int minSize;
-    int numFeatures;
-    int numTrees;
-
-    //Needed for init
-    int imgWidth;
-    int imgHeight;
-    int imgWidthStep;
-    int objWidth;
-    int objHeight;
-
-    int numWindows;
-    int *windows;
-    int *windowOffsets;
-
-    //State data
-    bool initialised;
-
-    //Components of Detector Cascade
-    ForegroundDetector *foregroundDetector;
-    VarianceFilter *varianceFilter;
-    EnsembleClassifier *ensembleClassifier;
-    Clustering *clustering;
-    NNClassifier *nnClassifier;
-
-    DetectionResult *detectionResult;
-
-    void propagateMembers();
 
     DetectorCascade();
-    ~DetectorCascade();
+    virtual ~DetectorCascade();
 
-    void init();
-
-    void initWindowOffsets();
-    void initWindowsAndScales();
-
-    void release();
-    void cleanPreviousData();
-    void detect(const cv::Mat &img);
+    virtual void init();
+    virtual void initWindowOffsets();
+    virtual void initWindowsAndScales();
+    virtual void propagateMembers();
+    virtual void release();
+    virtual void cleanPreviousData();
+    virtual void detect(const cv::Mat &img);
 };
 
 } /* namespace tld */

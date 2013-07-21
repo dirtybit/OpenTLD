@@ -42,9 +42,15 @@ void Main::doWork()
     Mat grey(img->height, img->width, CV_8UC1);
     cvtColor(cv::Mat(img), grey, CV_BGR2GRAY);
 
-    tld->detectorCascade->imgWidth = grey.cols;
-    tld->detectorCascade->imgHeight = grey.rows;
-    tld->detectorCascade->imgWidthStep = grey.step;
+    tld->detectorCascade->setImgSize(grey.cols, grey.rows, grey.step);
+
+#ifdef CUDA_ENABLED
+    tld->learningEnabled = false;
+    selectManually = false;
+
+    if(tld->learningEnabled || selectManually)
+        std::cerr << "Sorry. Learning and manual object selection is not supported with CUDA implementation yet!!!" << std::endl;
+#endif
 
 	if(showTrajectory)
 	{
@@ -103,7 +109,6 @@ void Main::doWork()
         tick_t procInit, procFinal;
         double tic = cvGetTickCount();
 
-        getCPUTick(&procInit);
 
         if(!reuseFrameOnce)
         {
@@ -120,7 +125,10 @@ void Main::doWork()
 
         if(!skipProcessingOnce)
         {
+            getCPUTick(&procInit);
             tld->processImage(img);
+            getCPUTick(&procFinal);
+            PRINT_TIMING("FrameProcTime", procInit, procFinal, "\n");
         }
         else
         {
@@ -139,8 +147,6 @@ void Main::doWork()
             }
         }
 
-        getCPUTick(&procFinal);
-        PRINT_TIMING("FrameProcTime", procInit, procFinal, "\n");
         double toc = (cvGetTickCount() - tic) / cvGetTickFrequency();
 
         toc = toc / 1000000;
@@ -213,6 +219,7 @@ void Main::doWork()
 
                 if(key == 'q') break;
 
+                /*
                 if(key == 'b')
                 {
 
@@ -227,6 +234,7 @@ void Main::doWork()
                         fg->bgImg.release();
                     }
                 }
+                */
 
                 if(key == 'c')
                 {

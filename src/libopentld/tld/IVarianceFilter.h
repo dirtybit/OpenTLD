@@ -17,14 +17,14 @@
 *
 */
 /*
- * VarianceFilter.h
+ * IVarianceFilter.h
  *
- *  Created on: Nov 16, 2011
- *      Author: Georg Nebehay
+ *  Created on: May 13, 2013
+ *      Author: Sertac Olgunsoylu
  */
 
-#ifndef VARIANCEFILTER_H_
-#define VARIANCEFILTER_H_
+#ifndef IVARIANCEFILTER_H_
+#define IVARIANCEFILTER_H_
 
 #include <opencv/cv.h>
 
@@ -34,11 +34,8 @@
 namespace tld
 {
 
-class VarianceFilter
+class IVarianceFilter
 {
-    IntegralImage<int>* integralImg;
-    IntegralImage<long long>* integralImg_squared;
-
 public:
     bool enabled;
     int *windowOffsets;
@@ -47,14 +44,9 @@ public:
 
     float minVar;
 
-    VarianceFilter();
-    virtual ~VarianceFilter();
+    virtual ~IVarianceFilter() { }
 
-    void release();
-    void nextIteration(const cv::Mat &img);
-    bool filter(int idx);
-    float calcVariance(int *off);
 };
 
 } /* namespace tld */
-#endif /* VARIANCEFILTER_H_ */
+#endif /* IVARIANCEFILTER_H_ */

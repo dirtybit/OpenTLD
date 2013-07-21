@@ -21,17 +21,22 @@
  *
  *  Created on: Nov 16, 2011
  *      Author: Georg Nebehay
+ *
+ *  Modified on: May 13, 2013
+ *      Author: Sertac Olgunsoylu
  */
 
 #ifndef ENSEMBLECLASSIFIER_H_
 #define ENSEMBLECLASSIFIER_H_
+
+#include "IEnsembleClassifier.h"
 
 #include <opencv/cv.h>
 
 namespace tld
 {
 
-class EnsembleClassifier
+class EnsembleClassifier : public IEnsembleClassifier
 {
     const unsigned char *img;
 
@@ -40,28 +45,6 @@ class EnsembleClassifier
     void calcFeatureVector(int windowIdx, int *featureVector);
     void updatePosteriors(int *featureVector, int positive, int amount);
 public:
-    bool enabled;
-
-    //Configurable members
-    int numTrees;
-    int numFeatures;
-
-    int imgWidthStep;
-    int numScales;
-    cv::Size *scales;
-
-    int *windowOffsets;
-    int *featureOffsets;
-    float *features;
-
-    int numIndices;
-
-    float *posteriors;
-    int *positives;
-    int *negatives;
-
-    DetectionResult *detectionResult;
-
     EnsembleClassifier();
     virtual ~EnsembleClassifier();
     void init();

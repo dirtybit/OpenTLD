@@ -27,9 +27,16 @@
 
 #include <iostream>
 
-#include "NNClassifier.h"
+#include "INNClassifier.h"
 #include "TLDUtil.h"
 #include "Timing.h"
+
+#ifdef CUDA_ENABLED
+#include "CuDetectorCascade.h"
+#else
+#include "DetectorCascade.h"
+#endif
+
 
 using namespace std;
 using namespace cv;
@@ -48,7 +55,11 @@ TLD::TLD()
     learning = false;
     currBB = prevBB = NULL;
 
+#ifdef CUDA_ENABLED
+    detectorCascade = new cuda::CuDetectorCascade();
+#else
     detectorCascade = new DetectorCascade();
+#endif
     nnClassifier = detectorCascade->nnClassifier;
 
     medianFlowTracker = new MedianFlowTracker();
@@ -127,12 +138,9 @@ void TLD::processImage(const Mat &img)
     }
 
 
-    getCPUTick(&procInit);
     fuseHypotheses();
 
     learn();
-    getCPUTick(&procFinal);
-    PRINT_TIMING("LearnTime", procInit, procFinal, ", ");
 
 }
 
@@ -385,8 +393,8 @@ typedef struct
 
 void TLD::writeToFile(const char *path)
 {
-    NNClassifier *nn = detectorCascade->nnClassifier;
-    EnsembleClassifier *ec = detectorCascade->ensembleClassifier;
+    INNClassifier *nn = detectorCascade->nnClassifier;
+    IEnsembleClassifier *ec = detectorCascade->ensembleClassifier;
 
     FILE *file = fopen(path, "w");
     fprintf(file, "#Tld ModelExport\n");
@@ -478,8 +486,8 @@ void TLD::readFromFile(const char *path)
 {
     release();
 
-    NNClassifier *nn = detectorCascade->nnClassifier;
-    EnsembleClassifier *ec = detectorCascade->ensembleClassifier;
+    INNClassifier *nn = detectorCascade->nnClassifier;
+    IEnsembleClassifier *ec = detectorCascade->ensembleClassifier;
 
     FILE *file = fopen(path, "r");
 

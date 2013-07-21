@@ -29,14 +29,12 @@
 #include <algorithm>
 
 #include "TLDUtil.h"
+#include "Timing.h"
 
 using namespace cv;
 
 namespace tld
 {
-
-//TODO: Convert this to a function
-#define sub2idx(x,y,imgWidthStep) ((int) (floor((x)+0.5) + floor((y)+0.5)*(imgWidthStep)))
 
 DetectorCascade::DetectorCascade()
 {
@@ -57,7 +55,7 @@ DetectorCascade::DetectorCascade()
 
     initialised = false;
 
-    foregroundDetector = new ForegroundDetector();
+    //foregroundDetector = new ForegroundDetector();
     varianceFilter = new VarianceFilter();
     ensembleClassifier = new EnsembleClassifier();
     nnClassifier = new NNClassifier();
@@ -70,7 +68,7 @@ DetectorCascade::~DetectorCascade()
 {
     release();
 
-    delete foregroundDetector;
+    //delete foregroundDetector;
     delete varianceFilter;
     delete ensembleClassifier;
     delete nnClassifier;
@@ -110,9 +108,9 @@ void DetectorCascade::propagateMembers()
     clustering->windows = windows;
     clustering->numWindows = numWindows;
 
-    foregroundDetector->minBlobSize = minSize * minSize;
+    //foregroundDetector->minBlobSize = minSize * minSize;
 
-    foregroundDetector->detectionResult = detectionResult;
+    //foregroundDetector->detectionResult = detectionResult;
     varianceFilter->detectionResult = detectionResult;
     ensembleClassifier->detectionResult = detectionResult;
     nnClassifier->detectionResult = detectionResult;
@@ -128,7 +126,7 @@ void DetectorCascade::release()
 
     initialised = false;
 
-    foregroundDetector->release();
+    //foregroundDetector->release();
     ensembleClassifier->release();
     nnClassifier->release();
 
@@ -271,6 +269,10 @@ void DetectorCascade::detect(const Mat &img)
 {
     //For every bounding box, the output is confidence, pattern, variance
 
+    VarianceFilter * _varianceFilter = dynamic_cast<VarianceFilter *>(varianceFilter);
+    EnsembleClassifier * _ensembleClassifier = dynamic_cast<EnsembleClassifier *>(ensembleClassifier);
+    NNClassifier * _nnClassifier = dynamic_cast<NNClassifier *>(nnClassifier);
+
     detectionResult->reset();
 
     if(!initialised)
@@ -278,16 +280,21 @@ void DetectorCascade::detect(const Mat &img)
         return;
     }
 
+    tick_t procInit, procFinal;
     //Prepare components
-    foregroundDetector->nextIteration(img); //Calculates foreground
-    varianceFilter->nextIteration(img); //Calculates integral images
-    ensembleClassifier->nextIteration(img);
+    //foregroundDetector->nextIteration(img); //Calculates foreground (DISABLED)
+    _varianceFilter->nextIteration(img); //Calculates integral images
+    _ensembleClassifier->nextIteration(img);
+    getCPUTick(&procInit);
 
+    int j = 0, k = 0;
     #pragma omp parallel for
 
     for(int i = 0; i < numWindows; i++)
-    {
-
+    {        
+        /*
+         * Foreground detection disabled
+         *
         int *window = &windows[TLD_WINDOW_SIZE * i];
 
         if(foregroundDetector->isActive())
@@ -312,19 +319,22 @@ void DetectorCascade::detect(const Mat &img)
                 continue;
             }
         }
+        */
 
-        if(!varianceFilter->filter(i))
+        if(!_varianceFilter->filter(i))
         {
             detectionResult->posteriors[i] = 0;
             continue;
         }
+        j++;
 
-        if(!ensembleClassifier->filter(i))
+        if(!_ensembleClassifier->filter(i))
         {
             continue;
         }
+        k++;
 
-        if(!nnClassifier->filter(img, i))
+        if(!_nnClassifier->filter(img, i))
         {
             continue;
         }
@@ -333,6 +343,9 @@ void DetectorCascade::detect(const Mat &img)
 
 
     }
+    std::cout << numWindows << " - " << j << " - " << k << " ";
+    getCPUTick(&procFinal);
+    PRINT_TIMING("ClsfyTime", procInit, procFinal, ", ");
 
     //Cluster
     clustering->clusterConfidentIndices();

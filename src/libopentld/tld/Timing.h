@@ -31,6 +31,6 @@ static __inline__ void getCPUTick(tick_t *c)
     *c = cvGetTickCount();
 }
 
-#define PRINT_TIMING(label, init, final, del) printf("%s:\t%.3lf%s", label, (final-init)/getCPUFreq()/1000.0, (del));
+#define PRINT_TIMING(label, init, final, del) printf("%s: %.3lf%s", label, (final-init)/getCPUFreq()/1000.0, (del));
 
 #endif
