@@ -112,6 +112,7 @@ Navigate with the terminal to the build directory
 * `brew install gfortran`
 * `easy_install numpy`
 * `brew install cmake`
+* `brew tap homebrew/science`
 * `brew install opencv`
 * `cmake` build the project
 
