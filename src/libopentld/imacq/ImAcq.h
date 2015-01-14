@@ -37,6 +37,7 @@ enum ImacqMethod
     IMACQ_IMGS, //!< Images
     IMACQ_CAM, //!< Camera
     IMACQ_VID, //!< Video
+    IMACQ_FILE, //!< Video
     IMACQ_LIVESIM //!< Livesim
 };
 

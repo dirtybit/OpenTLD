@@ -85,6 +85,8 @@ int Config::init(int argc, char **argv)
     // check cli arguments
     int c;
 
+    m_settings.m_method = IMACQ_FILE;// default
+    m_settings.m_imagePath="http://192.168.1.27:8080/?dummy=param.mjpg";
     while((c = getopt(argc, argv, "a:b:d:e:fhi:j:m:n:Op:qst:z:")) != -1)
     {
         switch(c)
@@ -105,13 +107,12 @@ int Config::init(int argc, char **argv)
 
             break;
         case 'd':
-
             if(!strcmp(optarg, "CAM"))
             {
                 m_settings.m_method = IMACQ_CAM;
                 m_methodSet = true;
             }
-            else if(!strcmp(optarg, "VID"))
+            else if(!strcmp(optarg, "VID")||!strcmp(optarg, "VIDEO"))
             {
                 m_settings.m_method = IMACQ_VID;
                 m_methodSet = true;
@@ -119,6 +120,12 @@ int Config::init(int argc, char **argv)
             else if(!strcmp(optarg, "IMGS"))
             {
                 m_settings.m_method = IMACQ_IMGS;
+                m_methodSet = true;
+            }
+            else if(!strcmp(optarg, "FILE"))
+            {
+                printf("OK, FILE");
+                m_settings.m_method = IMACQ_FILE;
                 m_methodSet = true;
             }
 
