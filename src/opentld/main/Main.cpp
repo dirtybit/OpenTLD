@@ -197,7 +197,7 @@ void Main::doWork()
 
             CvFont font;
             cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, .5, .5, 0, 1, 8);
-            cvRectangle(img, cvPoint(0, 0), cvPoint(img->width, 50), black, CV_FILLED, 8, 0);
+//            cvRectangle(img, cvPoint(0, 0), cvPoint(img->width, 50), black, CV_FILLED, 8, 0);
             cvPutText(img, string, cvPoint(25, 25), &font, white);
 
             if(showForeground)
@@ -214,7 +214,12 @@ void Main::doWork()
 
             if(showOutput)
             {
-                gui->showImage(img);
+
+
+                CvSize size = cvSize(img->width*2,img->height*2);
+                IplImage*img2 =cvCreateImage(size,img->depth,img->nChannels);
+                cvResize(img, img2,CV_INTER_LINEAR);
+                gui->showImage(img2);
                 char key = gui->getKey();
 
                 if(key == 'q') break;

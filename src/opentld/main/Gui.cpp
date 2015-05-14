@@ -46,8 +46,10 @@ Gui::~Gui()
 
 void Gui::init()
 {
-    cvNamedWindow(m_window_name.c_str(), CV_WINDOW_AUTOSIZE);
-    cvMoveWindow(m_window_name.c_str(), 100, 100);
+    char const *name = m_window_name.c_str();
+    cvNamedWindow(name, CV_WINDOW_AUTOSIZE);
+    cvMoveWindow(name, 1500, 800);
+//    cvResizeWindow(name, 800, 800);
 }
 
 void Gui::showImage(IplImage *image)
